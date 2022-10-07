@@ -1,0 +1,15 @@
+[features]
+seeds = false
+[programs.devnet]
+caller ="3m6gKTbq2rMSjbZZseuZWV7xbQ7czbUUjNuSBxPw8f1c"
+callee = "9MUGergwY55UxY79UCJv8tv5uDDCWqJ8bvnF5fEN54ox"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "devnet"
+wallet = "/home/c98lab/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
