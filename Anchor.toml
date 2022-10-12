@@ -1,9 +1,8 @@
 [features]
 seeds = false
 [programs.devnet]
-caller ="3m6gKTbq2rMSjbZZseuZWV7xbQ7czbUUjNuSBxPw8f1c"
-callee = "9MUGergwY55UxY79UCJv8tv5uDDCWqJ8bvnF5fEN54ox"
-
+caller ="2nUxAVo7aSEMeAapkKDJvms1r4TQotQj51ociCBJ5cDP"
+callee = "5McdVWZNcS21UEeCQpfigSB9XLeXo3nz98159LN5Yt9"
 [registry]
 url = "https://anchor.projectserum.com"
 

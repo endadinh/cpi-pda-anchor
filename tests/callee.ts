@@ -1,8 +1,11 @@
+import { Callee } from './../target/types/callee';
+import { Caller } from './../target/types/caller';
 import { BN } from "bn.js";
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
-import { Caller }  from "../target/types/caller";
-import { Callee } from '../target/types/callee';
+import { expect } from 'chai';
+
+// import { ProgramDerivedAddress } from "../target/types/program_derived_address";
 import { SolanaConfigService } from "@coin98/solana-support-library/config";
 import {
   ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
@@ -11,42 +14,153 @@ import {
   TOKEN_PROGRAM_ID,
   SystemProgramService
 } from "@coin98/solana-support-library";
+import { createProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
+import { publicKey } from '@project-serum/anchor/dist/cjs/utils';
 
 
 
 describe("callee", () => {
   anchor.setProvider(anchor.AnchorProvider.env());
   const program = anchor.workspace.Callee as Program<Callee>;
-  console.log('program',program.programId.toString());
-  
-  it("Is initialized!", async () => {
-    // Add your test here.
+  const callerProgram = anchor.workspace.Caller as Program<Caller>;
+
+  // it("Is initialized!", async () => {
+  //   // Add your test here.
+  //   const mainAccount = await SolanaConfigService.getDefaultAccount();
+  //   console.log('mainAccount',mainAccount);
+  //   const seedsArr = [4, 151, 229, 53, 244, 77, 229, 11];
+  //   const seeds = Buffer.from(seedsArr)
+  //   console.log('seeds',seeds);
+  const connection = new anchor.web3.Connection(
+    "https://api.devnet.solana.com",
+    "confirmed"
+  );
+  //     try { 
+  //       const programAccount = await connection.getAccountInfo(mainAccount.publicKey);
+  //       console.log('programAccount',programAccount.owner);
+  //       const [derivedWalletAddress, derivedWalletNonce] = await anchor.web3.PublicKey.findProgramAddress([seeds], program.programId)
+  //       console.log('here',derivedWalletAddress, derivedWalletNonce)
+  //       const tx = await program.methods.init(
+  //         seeds
+  //         )
+  //         .accounts({
+  //           payer: mainAccount.publicKey,
+  //           adminAccount: derivedWalletAddress,
+  //           systemProgram: anchor.web3.SystemProgram.programId
+  //         })
+  //         .signers([mainAccount])
+  //         .rpc();
+  //         console.log("Your transaction signature", tx);
+
+  //       // const tx = await callerProgram.methods.doCpiWithPdaAuthority(
+  //       //   new BN(1000)
+  //       // ) 
+  //       // .accounts({ 
+  //       //   dataAcc : derivedWalletAddress,
+  //       //   calleeAuthority: derivedWalletAddress,
+  //       //   callee: program.programId
+  //       // })
+  //       // .signers([mainAccount])
+  //       // .rpc();
+  //       // console.log('Doing with PDA AUTHOR')
+  //       //     console.log("Your transaction signature", tx);
+
+
+  //       }
+  //       catch(error) { 
+  //         console.log('Error occur here',error);
+  //       }
+  //     });
+
+
+  //   it("Is initialized!", async () => {
+  //     // Add your test here.
+  //     const mainAccount = await SolanaConfigService.getDefaultAccount();
+  //     console.log('mainAccount',mainAccount);
+  //     const seedsArr = [4, 151, 229, 53, 244, 77, 229, 11];
+  //     const seeds = Buffer.from(seedsArr)
+  //     console.log('seeds',seeds);
+  //     const connection = new anchor.web3.Connection(
+  //       "https://api.devnet.solana.com",
+  //       "confirmed"
+  //       );
+  //       try { 
+  //         const programAccount = await connection.getAccountInfo(mainAccount.publicKey);
+  //         console.log('programAccount',programAccount.owner);
+  //         const [derivedWalletAddress, derivedWalletNonce] = await anchor.web3.PublicKey.findProgramAddress([seeds], program.programId)
+  //         console.log('here',derivedWalletAddress, derivedWalletNonce)
+  //         const tx = await program.methods.setData(
+  //           new BN(1000)
+  //           )
+  //           .accounts({
+  //             adminAccount: derivedWalletAddress,
+  //             accountData: mainAccount.publicKey
+  //           })
+  //           // .signers([mainAccount])
+  //           .rpc();
+  //           console.log("Your transaction signature", tx);
+  //         }
+  //         catch(error) { 
+  //           console.log('Error occur here',error);
+  //         }
+  //       });
+
+  // });
+
+
+
+  it('Does CPI!', async () => {
+    const seedsArr = [102, 151, 229, 53, 244, 77, 229, 11];
+    
+    const seeds = Buffer.from(seedsArr)
+    const [calleeMasterPDA, calleeMasterBump] =
+      await anchor.web3.PublicKey.findProgramAddress([seeds], program.programId);
     const mainAccount = await SolanaConfigService.getDefaultAccount();
-    const authAccount = await anchor.web3.Keypair.generate();
-        const connection = new anchor.web3.Connection(
-          "https://api.devnet.solana.com",
-          "confirmed"
-        );
-        try { 
-          
-          const tx = await program.methods.init()
-          .accounts({
-            data: mainAccount.publicKey,
-            payer: mainAccount.publicKey,
-            authority: mainAccount.publicKey,
-            systemProgram: anchor.web3.SystemProgram.programId
-          })
-          .rpc();
-          console.log("Your transaction signature", tx);
-        }
-        catch(error) { 
-          console.log('Error occur here',error);
-        }
-  });
-});
+    const system_program = await anchor.web3.SystemProgram.programId;
+    try { 
+      const tx = await program.methods
+        .init()
+        .accounts({
+          owner: mainAccount.publicKey,
+          callee: calleeMasterPDA,
+          systemProgram: system_program,
+  
+        })
+        .signers([mainAccount])
+        .rpc()
+        // console.log('done 1 !');
+        console.log('tx_here',tx);
+    }
+    catch(error) { 
+      console.log('error,',error)
+    }
 
+    try { 
+      const tx = await callerProgram.methods
+        .doCpiWithPdaAuthority(8)
+        .accounts({
+          calleeProgram: program.programId,
+          callee: calleeMasterPDA,
+          systemProgram: system_program,
+        })
+        .rpc()
 
+        console.log('tx_here',tx)
+    }
+  
+    //   // expect(
+    //   //   (
+    //   //     await program.account.dataCallee.fetch(calleeMasterPDA)
+    //   //   ).data.toNumber()
+    //   // ).to.equal(42)
+    // }
+    catch(error) { 
+      console.log('error',error)
+    }
 
+  })
+
+})
 
 // describe("caller", async () => {
 //   anchor.setProvider(anchor.AnchorProvider.env());
